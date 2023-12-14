@@ -1,0 +1,6 @@
+@Gustavo.CustomersTestAPI_HostAddress = http://localhost:5250
+
+GET {{Gustavo.CustomersTestAPI_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
