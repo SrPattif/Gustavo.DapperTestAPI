@@ -16,20 +16,136 @@ namespace Gustavo.CustomersTestAPI.Repositories
         {
             using(var conn = _dbSession.connection)
             {
+
+                var query = @"
+                SELECT 
+                    c.CustomerId,
+                    c.ClientType,
+                    c.CPF,
+                    c.CNPJ,
+                    c.FullName,
+                    c.CompanyName,
+                    c.TradeName,
+                    a.AddressId,
+                    a.Address,
+                    a.HouseNumber,
+                    a.City,
+                    a.State,
+                    a.Country,
+                    a.PostalCode,
+                    a.CustomerId
+                FROM Customers c
+                LEFT JOIN Adresses a ON c.CustomerId = a.CustomerId";
+
+                var customersList = new List<Customer>();
+                var result = await conn.QueryAsync<Customer, CustomerAddress, Customer>(
+                    query,
+                    (customer, address) =>
+                    {
+                        var CustomerCached = customersList.FirstOrDefault(c => c.CustomerId == customer.CustomerId);
+
+                        if (CustomerCached == null)
+                        {
+                            customer.Adresses = new List<CustomerAddress> { address };
+                            customersList.Add(customer);
+                        }
+                        else
+                        {
+                            CustomerCached.Adresses.Add(address);
+                        }
+
+                        return null;
+                    },
+                    splitOn: "AddressId");
+
+                return customersList;
+
+                /*
                 string query = "SELECT [Id], [ClientType], [CPF], [CNPJ], [FullName], [CompanyName], [TradeName] FROM [TesteAPI].[dbo].[Customers]";
                 List<Customer> customers = (await conn.QueryAsync<Customer>(sql: query)).ToList();
                 return customers;
+                */
             }
         }
 
-        public async Task<Customer?> GetByIdAsync(int id)
+        public async Task<Customer?> GetByIdWithAdressesAsync(int CustomerId)
         {
             using (var conn = _dbSession.connection)
             {
-                string query = "SELECT [Id], [ClientType], [CPF], [CNPJ], [FullName], [CompanyName], [TradeName] FROM [TesteAPI].[dbo].[Customers] WHERE Id = @id";
-                var customer = await conn.QueryFirstOrDefaultAsync<Customer>
-                    (sql: query, param: new { id });
-                return customer;
+                var query = @"
+                SELECT 
+                    c.CustomerId,
+                    c.ClientType,
+                    c.CPF,
+                    c.CNPJ,
+                    c.FullName,
+                    c.CompanyName,
+                    c.TradeName,
+                    a.AddressId,
+                    a.Address,
+                    a.HouseNumber,
+                    a.City,
+                    a.State,
+                    a.Country,
+                    a.PostalCode,
+                    a.CustomerId
+                FROM Customers c
+                LEFT JOIN Adresses a ON c.CustomerId = a.CustomerId
+                WHERE c.CustomerId = @CustomerId";
+
+                /*
+
+                var customersDictionary = new Dictionary<int, Customer>();
+                var result = conn.Query<Customer, CustomerAddress, Customer>(
+                    query,
+                    (customer, address) =>
+                    {
+                        if (!customersDictionary.TryGetValue(customer.Id, out var customerEntry))
+                        {
+                            customerEntry = customer;
+                            customerEntry.Adresses = new List<CustomerAddress>();
+                            customersDictionary.Add(customerEntry.Id, customerEntry);
+                        }
+
+                        if (address != null)
+                        {
+                            customerEntry.Adresses.Add(address);
+                        }
+
+                        return customerEntry;
+                    },
+                new { CustomerId },
+                splitOn: "AddressId")
+                .Distinct()
+                .SingleOrDefault();
+
+                return result;
+
+                */
+
+                var customersList = new List<Customer>();
+                var result = await conn.QueryAsync<Customer, CustomerAddress, Customer>(
+                    query,
+                    (customer, address) =>
+                    {
+                        var CustomerCached = customersList.FirstOrDefault(c => c.CustomerId == customer.CustomerId);
+
+                        if (CustomerCached == null)
+                        {
+                            customer.Adresses = new List<CustomerAddress> { address };
+                            customersList.Add(customer);
+                        }
+                        else
+                        {
+                            CustomerCached.Adresses.Add(address);
+                        }
+
+                        return null;
+                    },
+                    new { CustomerId },
+                    splitOn: "AddressId");
+
+                return customersList.First();
             }
         }
 
@@ -65,7 +181,7 @@ namespace Gustavo.CustomersTestAPI.Repositories
             using (var conn = _dbSession.connection)
             {
                 string query = @"
-    		     UPDATE Customers SET [ClientType] = @IsCompleta, [CPF] = @CPF, [CNPJ] = @CNPJ, [FullName] = @FullName, [CompanyName] = @CompanyName, [TradeName] = @TradeName WHERE Id = @Id";
+    		     UPDATE Customers SET [ClientType] = @ClientType, [CPF] = @CPF, [CNPJ] = @CNPJ, [FullName] = @FullName, [CompanyName] = @CompanyName, [TradeName] = @TradeName WHERE Id = @Id";
                 var result = await conn.ExecuteAsync(sql: query, param: customer);
                 return result;
             }
@@ -75,7 +191,7 @@ namespace Gustavo.CustomersTestAPI.Repositories
         {
             using (var conn = _dbSession.connection)
             {
-                string query = @"DELETE FROM Tarefas WHERE Id = @id";
+                string query = @"DELETE FROM Customers WHERE CustomerId = @id";
                 var result = await conn.ExecuteAsync(sql: query, param: new { id });
                 return result;
             }
@@ -85,9 +201,22 @@ namespace Gustavo.CustomersTestAPI.Repositories
         {
             using (var conn = _dbSession.connection)
             {
-                string query = @"DELETE FROM Tarefas WHERE Id = @id";
-                var result = await conn.ExecuteAsync(sql: query, param: new { customer.Id });
+                string query = @"DELETE FROM Customers WHERE CustomerId = @id";
+                var result = await conn.ExecuteAsync(sql: query, param: new { customer.CustomerId });
                 return result;
+            }
+        }
+
+        public async Task<Customer?> GetByIdAsync(int id)
+        {
+            using (var conn = _dbSession.connection)
+            {
+
+                string query = "SELECT [Id], [ClientType], [CPF], [CNPJ], [FullName], [CompanyName], [TradeName] FROM [TesteAPI].[dbo].[Customers] WHERE CustomerId = @id";
+                var customer = await conn.QueryFirstOrDefaultAsync<Customer>
+                    (sql: query, param: new { id });
+                return customer;
+
             }
         }
     }

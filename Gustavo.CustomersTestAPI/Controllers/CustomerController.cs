@@ -37,7 +37,7 @@ namespace Gustavo.CustomersTestAPI.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult> GetById(int id)
         {
-            var customer = await _customerRepo.GetByIdAsync(id);
+            var customer = await _customerRepo.GetByIdWithAdressesAsync(id);
             if (customer == null) return BadRequest(new { success = false, error_details = "Customer not found." });
 
             return Ok(new { success = true, customer = customer });
@@ -83,7 +83,10 @@ namespace Gustavo.CustomersTestAPI.Controllers
 
                 if (customer.CNPJ.Length != 14 || new Regex("^[0-9]+$").IsMatch(customer.CNPJ) == false)
                 {
-                    return BadRequest(new { success = false, error_details = "Invalid CNPJ." });
+                    return BadRequest(new {
+                        success = false,
+                        error_details = "Invalid CNPJ."
+                    });
                 }
 
                 customer.CPF = null;
@@ -102,8 +105,12 @@ namespace Gustavo.CustomersTestAPI.Controllers
 
         // DELETE api/<CustomerController>/5
         [HttpDelete("{id}")]
-        public void Delete(int id)
+        public async Task<ActionResult> Delete(int id)
         {
+            var result = await _customerRepo.DeleteAsync(id);
+
+            return Ok(result);
+
         }
     }
 }

@@ -12,7 +12,7 @@ namespace Gustavo.CustomersTestAPI.Data
             try
             {
                 var connectionString = configuration.GetConnectionString("DefaultConnection");
-                Console.WriteLine(connectionString);
+                //Console.WriteLine(connectionString);
                 connection = new SqlConnection(connectionString);
             }
             catch (Exception ex)

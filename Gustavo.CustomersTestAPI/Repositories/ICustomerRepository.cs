@@ -6,6 +6,7 @@ namespace Gustavo.CustomersTestAPI.Repositories
     {
         Task<List<Customer>> GetAllAsync();
         Task<Customer?> GetByIdAsync(int id);
+        Task<Customer?> GetByIdWithAdressesAsync(int id);
         Task<CustomerContainer> GetContainerAsync();
         Task<int> SaveAsync(Customer customer);
         Task<int> UpdateAsync(Customer customer);

@@ -19,6 +19,7 @@ namespace Gustavo.CustomersTestAPI
 
             builder.Services.AddScoped<DbSession>();
             builder.Services.AddTransient<ICustomerRepository, CustomerRepository>();
+            builder.Services.AddTransient<IAdressesRepository, AdressesRepository>();
 
             var app = builder.Build();
 
